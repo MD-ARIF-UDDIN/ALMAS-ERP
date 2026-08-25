@@ -28,7 +28,8 @@ INSERT INTO auth.users (
   email_change,
   email_change_token_new,
   recovery_token
-) VALUES (
+) 
+SELECT 
   '00000000-0000-0000-0000-000000000000',
   gen_random_uuid(),
   'authenticated',
@@ -46,7 +47,9 @@ INSERT INTO auth.users (
   '',
   '',
   ''
-) ON CONFLICT (email) DO NOTHING;
+WHERE NOT EXISTS (
+  SELECT 1 FROM auth.users WHERE email = 'admin@gmail.com'
+);
 
 -- 3. Link the user to public.profiles and set their role to 'owner'
 -- This creates or updates the profile corresponding to the auth account.
