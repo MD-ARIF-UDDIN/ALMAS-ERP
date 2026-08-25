@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
-import { KeyRound, Mail, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { KeyRound, Mail, Eye, EyeOff } from 'lucide-react';
 
 export default function Auth({ onAuthSuccess }) {
   const [email, setEmail] = useState('');
@@ -45,103 +45,64 @@ export default function Auth({ onAuthSuccess }) {
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '100vh',
-        background: 'radial-gradient(circle at 10% 20%, rgba(4, 21, 45, 1) 0%, rgba(14, 18, 30, 1) 100%)',
-        position: 'relative',
-        overflow: 'hidden',
+        backgroundColor: '#f8fafc',
+        padding: '1.5rem',
         fontFamily: 'Outfit, sans-serif',
       }}
     >
-      {/* BACKGROUND DECORATIVE GLOWS */}
       <div
         style={{
-          position: 'absolute',
-          top: '20%',
-          left: '15%',
-          width: '350px',
-          height: '350px',
-          background: 'radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(14, 165, 233, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(50px)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '20%',
-          right: '15%',
-          width: '400px',
-          height: '400px',
-          background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 70%)',
-          borderRadius: '50%',
-          filter: 'blur(60px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      <div
-        style={{
-          maxWidth: '420px',
+          maxWidth: '400px',
           width: '100%',
-          margin: '1.5rem',
-          padding: '2.5rem 2.25rem',
-          borderRadius: '24px',
-          backgroundColor: 'rgba(15, 23, 42, 0.45)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.05)',
-          zIndex: 1,
+          padding: '2.5rem 2rem',
+          borderRadius: '16px',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
         }}
       >
         {/* BRAND LOGO HEADER */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
           <div
             style={{
-              width: '64px',
-              height: '64px',
-              borderRadius: '16px',
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.25)',
+              width: '56px',
+              height: '56px',
+              borderRadius: '12px',
+              backgroundColor: '#f1f5f9',
+              border: '1px solid #e2e8f0',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '1rem',
-              backdropFilter: 'blur(10px)',
             }}
           >
-            <img src="/favicon.svg" alt="Almas Logo" style={{ width: '40px', height: '40px' }} />
+            <img src="/favicon.svg" alt="Almas Logo" style={{ width: '36px', height: '36px' }} />
           </div>
           <h1
             style={{
               margin: 0,
-              fontSize: '1.8rem',
-              fontWeight: 850,
-              fontFamily: 'Outfit, sans-serif',
-              letterSpacing: '-0.75px',
-              background: 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              fontSize: '1.5rem',
+              fontWeight: 800,
+              color: '#000000',
+              letterSpacing: '-0.5px',
               textAlign: 'center',
             }}
           >
-            ALMAS ACCS ERP
+            ALMAS ACCESSORIES
           </h1>
           <p
             style={{
               margin: '0.25rem 0 0 0',
-              color: '#94a3b8',
+              color: '#475569',
               fontSize: '0.85rem',
               fontWeight: 500,
-              letterSpacing: '0.25px',
               textAlign: 'center',
             }}
           >
-            Secure Enterprise Resource Portal
+            Sign in to access your dashboard
           </p>
         </div>
 
@@ -149,22 +110,17 @@ export default function Auth({ onAuthSuccess }) {
         {errorMsg && (
           <div
             style={{
-              backgroundColor: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-              color: '#f87171',
+              backgroundColor: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#b91c1c',
               padding: '0.75rem 1rem',
-              borderRadius: '12px',
+              borderRadius: '8px',
               fontSize: '0.825rem',
-              marginBottom: '1.5rem',
+              marginBottom: '1.25rem',
               fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              animation: 'shake 0.3s ease-in-out',
             }}
           >
-            <span style={{ display: 'inline-block', width: '6px', height: '6px', backgroundColor: '#ef4444', borderRadius: '50%' }} />
-            <span>{errorMsg}</span>
+            {errorMsg}
           </div>
         )}
 
@@ -172,7 +128,7 @@ export default function Auth({ onAuthSuccess }) {
         <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* EMAIL INPUT */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label htmlFor="email" style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.78rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            <label htmlFor="email" style={{ color: '#000000', fontWeight: 600, fontSize: '0.8rem' }}>
               Email Address
             </label>
             <div style={{ position: 'relative' }}>
@@ -183,8 +139,8 @@ export default function Auth({ onAuthSuccess }) {
                   left: '1rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: focusedField === 'email' ? '#0ea5e9' : '#64748b',
-                  transition: 'color 0.25s ease',
+                  color: focusedField === 'email' ? '#000000' : '#64748b',
+                  transition: 'color 0.2s ease',
                 }}
               />
               <input
@@ -198,14 +154,14 @@ export default function Auth({ onAuthSuccess }) {
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem 0.75rem 2.5rem',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                  border: focusedField === 'email' ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  border: focusedField === 'email' ? '1px solid #000000' : '1px solid #cbd5e1',
                   outline: 'none',
-                  color: '#ffffff',
+                  color: '#000000',
                   fontSize: '0.9rem',
-                  transition: 'all 0.25s ease',
-                  boxShadow: focusedField === 'email' ? '0 0 12px rgba(14, 165, 233, 0.15)' : 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: focusedField === 'email' ? '0 0 0 3px rgba(0, 0, 0, 0.05)' : 'none',
                 }}
                 required
                 autoFocus
@@ -215,7 +171,7 @@ export default function Auth({ onAuthSuccess }) {
 
           {/* PASSWORD INPUT */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <label htmlFor="password" style={{ color: '#94a3b8', fontWeight: 600, fontSize: '0.78rem', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            <label htmlFor="password" style={{ color: '#000000', fontWeight: 600, fontSize: '0.8rem' }}>
               Password
             </label>
             <div style={{ position: 'relative' }}>
@@ -226,8 +182,8 @@ export default function Auth({ onAuthSuccess }) {
                   left: '1rem',
                   top: '50%',
                   transform: 'translateY(-50%)',
-                  color: focusedField === 'password' ? '#0ea5e9' : '#64748b',
-                  transition: 'color 0.25s ease',
+                  color: focusedField === 'password' ? '#000000' : '#64748b',
+                  transition: 'color 0.2s ease',
                 }}
               />
               <input
@@ -241,14 +197,14 @@ export default function Auth({ onAuthSuccess }) {
                 style={{
                   width: '100%',
                   padding: '0.75rem 2.5rem 0.75rem 2.5rem',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.6)',
-                  border: focusedField === 'password' ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  border: focusedField === 'password' ? '1px solid #000000' : '1px solid #cbd5e1',
                   outline: 'none',
-                  color: '#ffffff',
+                  color: '#000000',
                   fontSize: '0.9rem',
-                  transition: 'all 0.25s ease',
-                  boxShadow: focusedField === 'password' ? '0 0 12px rgba(14, 165, 233, 0.15)' : 'none',
+                  transition: 'all 0.2s ease',
+                  boxShadow: focusedField === 'password' ? '0 0 0 3px rgba(0, 0, 0, 0.05)' : 'none',
                 }}
                 required
               />
@@ -267,10 +223,10 @@ export default function Auth({ onAuthSuccess }) {
                   display: 'flex',
                   alignItems: 'center',
                   padding: 0,
-                  transition: 'color 0.25s ease',
+                  transition: 'color 0.2s ease',
                 }}
               >
-                {showPassword ? <EyeOff size={16} style={{ color: '#0ea5e9' }} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={16} style={{ color: '#000000' }} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
@@ -282,54 +238,31 @@ export default function Auth({ onAuthSuccess }) {
             style={{
               width: '100%',
               padding: '0.8rem 1rem',
-              borderRadius: '12px',
+              borderRadius: '8px',
               border: 'none',
-              background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+              backgroundColor: '#000000',
               color: '#ffffff',
-              fontSize: '0.925rem',
+              fontSize: '0.9rem',
               fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 8px 20px -6px rgba(14, 165, 233, 0.35)',
-              transition: 'all 0.25s ease',
+              transition: 'all 0.2s ease',
               marginTop: '0.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
             }}
             onMouseOver={(e) => {
               if (!loading) {
-                e.currentTarget.style.transform = 'translateY(-1px)';
-                e.currentTarget.style.boxShadow = '0 10px 24px -4px rgba(14, 165, 233, 0.5)';
+                e.currentTarget.style.backgroundColor = '#1e293b';
               }
             }}
             onMouseOut={(e) => {
               if (!loading) {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 8px 20px -6px rgba(14, 165, 233, 0.35)';
+                e.currentTarget.style.backgroundColor = '#000000';
               }
             }}
           >
-            {loading ? (
-              <span>Signing In...</span>
-            ) : (
-              <>
-                <ShieldCheck size={18} />
-                <span>Sign In securely</span>
-              </>
-            )}
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
         </form>
       </div>
-
-      {/* SHAKE ANIMATION CSS */}
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-      `}</style>
     </div>
   );
 }
