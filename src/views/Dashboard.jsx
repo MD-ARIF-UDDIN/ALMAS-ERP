@@ -2,27 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { LayoutDashboard, TrendingUp, ShoppingBag, Receipt, AlertCircle, ShoppingCart } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Dashboard({ userProfile, branches }) {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ sales: 0, purchases: 0, expenses: 0, profit: 0 });
   const [lowStockCount, setLowStockCount] = useState(0);
   const [recentSales, setRecentSales] = useState([]);
-  const [selectedBranchId, setSelectedBranchId] = useState('');
 
   const role = userProfile?.role || 'staff';
   const myBranchId = userProfile?.branch_id;
 
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (role === 'owner') return 'all';
+    return myBranchId || (branches.length > 0 ? branches[0].id : '');
+  });
+
   useEffect(() => {
-    if (role === 'owner') {
-      if (branches.length > 0 && !selectedBranchId) {
+    if (!selectedBranchId) {
+      if (role === 'owner') {
         setSelectedBranchId('all');
+      } else {
+        setSelectedBranchId(myBranchId || (branches.length > 0 ? branches[0].id : ''));
       }
-    } else {
-      setSelectedBranchId(myBranchId);
     }
-  }, [branches, userProfile]);
+  }, [branches, userProfile, role, myBranchId, selectedBranchId]);
 
   useEffect(() => {
     if (selectedBranchId) {
@@ -113,7 +118,6 @@ export default function Dashboard({ userProfile, branches }) {
       <div className="top-bar">
         <div className="page-title-group">
           <h1>Welcome, {userProfile?.full_name || 'Staff User'}!</h1>
-          <p>Here is your daily factory & branch operations performance dashboard.</p>
         </div>
 
         <div className="top-bar-actions">
@@ -202,7 +206,9 @@ export default function Dashboard({ userProfile, branches }) {
                 </tr>
               </thead>
               <tbody>
-                {recentSales.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={5} message="Fetching recent transactions..." />
+                ) : recentSales.length === 0 ? (
                   <tr>
                     <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
                       No recent sales recorded.

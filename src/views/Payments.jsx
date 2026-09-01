@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { CreditCard, TrendingUp, TrendingDown, Plus, Search, HelpCircle, DollarSign } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Payments({ userProfile, branches, addToast }) {
   const [activeSubTab, setActiveSubTab] = useState('invoices'); // 'invoices' or 'ledger'
   const [invoiceType, setInvoiceType] = useState('sales'); // 'sales' (receivables) or 'purchases' (payables)
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingLedger, setLoadingLedger] = useState(false);
 
   // Data lists
   const [invoices, setInvoices] = useState([]);
@@ -24,17 +26,24 @@ export default function Payments({ userProfile, branches, addToast }) {
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentNotes, setPaymentNotes] = useState('');
 
-  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (userProfile?.role === 'owner') {
+      return branches.length > 0 ? branches[0].id : '';
+    }
+    return userProfile?.branch_id || (branches.length > 0 ? branches[0].id : '');
+  });
 
   useEffect(() => {
-    if (userProfile?.role === 'owner') {
-      if (branches.length > 0 && !selectedBranchId) {
-        setSelectedBranchId(branches[0].id);
+    if (!selectedBranchId) {
+      if (userProfile?.role === 'owner') {
+        if (branches.length > 0) {
+          setSelectedBranchId(branches[0].id);
+        }
+      } else {
+        setSelectedBranchId(userProfile?.branch_id || (branches.length > 0 ? branches[0].id : ''));
       }
-    } else {
-      setSelectedBranchId(userProfile?.branch_id || '');
     }
-  }, [branches, userProfile]);
+  }, [branches, userProfile, selectedBranchId]);
 
   useEffect(() => {
     if (selectedBranchId) {
@@ -118,6 +127,7 @@ export default function Payments({ userProfile, branches, addToast }) {
 
   const fetchPaymentsLog = async () => {
     if (!selectedBranchId) return;
+    setLoadingLedger(true);
     try {
       const { data, error } = await supabase
         .from('payments')
@@ -149,6 +159,8 @@ export default function Payments({ userProfile, branches, addToast }) {
       setPaymentsLog(data || []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingLedger(false);
     }
   };
 
@@ -238,7 +250,6 @@ export default function Payments({ userProfile, branches, addToast }) {
       <div className="top-bar">
         <div className="page-title-group">
           <h1>Payments & Receipts</h1>
-          <p>Collect customer payments for sales invoices, or pay supplier bills.</p>
         </div>
         {userProfile?.role === 'owner' && (
           <div className="top-bar-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -344,7 +355,9 @@ export default function Payments({ userProfile, branches, addToast }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredInvoices.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={userProfile?.role === 'owner' ? 10 : 9} message="Fetching invoices..." />
+                ) : filteredInvoices.length === 0 ? (
                   <tr>
                     <td colSpan={userProfile?.role === 'owner' ? 10 : 9} style={{ textAlign: 'center', padding: '2rem' }}>
                       No invoices found matching the current filters.
@@ -421,7 +434,9 @@ export default function Payments({ userProfile, branches, addToast }) {
                 </tr>
               </thead>
               <tbody>
-                {paymentsLog.length === 0 ? (
+                {loadingLedger ? (
+                  <TableLoading colSpan={userProfile?.role === 'owner' ? 10 : 9} message="Fetching payment transaction logs..." />
+                ) : paymentsLog.length === 0 ? (
                   <tr>
                     <td colSpan={userProfile?.role === 'owner' ? 10 : 9} style={{ textAlign: 'center', padding: '2rem' }}>
                       No payments registered yet.

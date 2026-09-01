@@ -539,13 +539,23 @@ th {
   letter-spacing: 0.5px;
   padding: 0.45rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+th:last-child {
+  border-right: none;
 }
 
 td {
   padding: 0.45rem 0.75rem;
   border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
   color: var(--text-secondary);
   font-size: 0.8rem;
+}
+
+td:last-child {
+  border-right: none;
 }
 
 tr:last-child td {
@@ -554,6 +564,11 @@ tr:last-child td {
 
 tr:hover td {
   background-color: #fafaf9;
+}
+
+/* Invoice totals alignment override */
+.invoice-totals-table td {
+  border-right: none;
 }
 
 /* ====================================================================
@@ -1212,4 +1227,25 @@ label {
     opacity: 1;
   }
 }
+
+/* ====================================================================
+   LOADING INDICATORS & SPINNER
+   ==================================================================== */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+.table-loading-row td {
+  background-color: transparent !important;
+}
+
 

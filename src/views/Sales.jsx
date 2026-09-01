@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { Search, ShoppingCart, Trash2, Printer, Plus, UserPlus, CreditCard } from 'lucide-react';
+import { TableLoading, LoadingBlock } from '../components/TableLoading';
 
 export default function Sales({ userProfile, branches, addToast }) {
   const [products, setProducts] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [cart, setCart] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadingInventory, setLoadingInventory] = useState(false);
   
   // Sales History List & Modal state
   const [salesHistory, setSalesHistory] = useState([]);
@@ -36,24 +38,36 @@ export default function Sales({ userProfile, branches, addToast }) {
   const [invoiceItems, setInvoiceItems] = useState([]);
   const [showInvoicePrint, setShowInvoicePrint] = useState(false);
 
-  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (userProfile?.role === 'owner') {
+      return branches.length > 0 ? branches[0].id : '';
+    }
+    return userProfile?.branch_id || (branches.length > 0 ? branches[0].id : '');
+  });
 
   useEffect(() => {
-    if (userProfile?.role === 'owner') {
-      if (branches.length > 0 && !selectedBranchId) {
-        setSelectedBranchId(branches[0].id);
+    if (!selectedBranchId) {
+      if (userProfile?.role === 'owner') {
+        if (branches.length > 0) {
+          setSelectedBranchId(branches[0].id);
+        }
+      } else {
+        setSelectedBranchId(userProfile?.branch_id || (branches.length > 0 ? branches[0].id : ''));
       }
-    } else {
-      setSelectedBranchId(userProfile?.branch_id || '');
     }
-  }, [branches, userProfile]);
+  }, [branches, userProfile, selectedBranchId]);
 
   const activeBranch = branches.find((b) => b.id === selectedBranchId);
 
+  // Fetch customers on mount
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  // Fetch branch-specific inventory and sales history
   useEffect(() => {
     if (selectedBranchId) {
       fetchBranchInventory();
-      fetchCustomers();
       fetchSalesHistory();
     }
   }, [selectedBranchId]);
@@ -64,6 +78,7 @@ export default function Sales({ userProfile, branches, addToast }) {
 
   const fetchBranchInventory = async () => {
     if (!selectedBranchId) return;
+    setLoadingInventory(true);
     try {
       // Fetch products which have stock at this branch
       const { data, error } = await supabase
@@ -87,6 +102,8 @@ export default function Sales({ userProfile, branches, addToast }) {
     } catch (err) {
       console.error(err);
       showMessage('Failed to load branch product inventory.', 'error');
+    } finally {
+      setLoadingInventory(false);
     }
   };
 
@@ -431,7 +448,6 @@ export default function Sales({ userProfile, branches, addToast }) {
       <div className="no-print top-bar">
         <div className="page-title-group">
           <h1>Customer Sales Invoices</h1>
-          <p>Manage customer sales history, check payments, and create new invoices via POS.</p>
         </div>
         <div className="top-bar-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {userProfile?.role === 'owner' && (
@@ -491,7 +507,9 @@ export default function Sales({ userProfile, branches, addToast }) {
                 </tr>
               </thead>
               <tbody>
-                {salesHistory.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={userProfile?.role === 'owner' ? 10 : 9} message="Fetching sales records..." />
+                ) : salesHistory.length === 0 ? (
                   <tr>
                     <td colSpan={userProfile?.role === 'owner' ? 10 : 9} style={{ textAlign: 'center', padding: '2rem' }}>
                       No sales invoices recorded yet. Click "Create Invoice (POS)" to sell items.
@@ -564,7 +582,11 @@ export default function Sales({ userProfile, branches, addToast }) {
                 </div>
 
                 <div className="product-grid">
-                  {filteredProducts.length === 0 ? (
+                  {loadingInventory ? (
+                    <div className="card" style={{ gridColumn: '1 / -1' }}>
+                      <LoadingBlock message="Loading branch stock catalog..." />
+                    </div>
+                  ) : filteredProducts.length === 0 ? (
                     <div className="card" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem' }}>
                       No available items found in this branch's stock.
                     </div>

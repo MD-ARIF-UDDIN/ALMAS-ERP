@@ -6,6 +6,7 @@ import {
   Users,
   UserCheck,
   Package,
+  Layers,
   ShoppingCart,
   Download,
   CreditCard,
@@ -15,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+
+import { hasPermission } from '../utils/permissions';
 
 export default function Sidebar({ userProfile, onLogout, branches, isOpen, setIsOpen, isCollapsed, setIsCollapsed }) {
   const role = userProfile?.role || 'staff';
@@ -30,16 +33,24 @@ export default function Sidebar({ userProfile, onLogout, branches, isOpen, setIs
   const activeView = getActiveView();
 
   const menuItems = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'users', name: 'eStaff', icon: UserCheck, roles: ['owner'] },
-    { id: 'contacts', name: 'eContacts', icon: Users, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'inventory', name: 'eInventory', icon: Package, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'sales', name: 'eSales', icon: ShoppingCart, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'purchases', name: 'ePurchases', icon: Download, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'payments', name: 'ePayments', icon: CreditCard, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'expenses', name: 'eExpenses', icon: Receipt, roles: ['owner', 'branch_manager', 'staff'] },
-    { id: 'reports', name: 'eReports', icon: BarChart3, roles: ['owner', 'branch_manager', 'staff'] },
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, perm: null },
+    { id: 'users', name: 'eStaff', icon: UserCheck, perm: 'users.manage', ownerOnly: true },
+    { id: 'contacts', name: 'eContacts', icon: Users, perm: 'contacts.view' },
+    { id: 'products', name: 'eProduct', icon: Layers, perm: 'product.view' },
+    { id: 'inventory', name: 'eInventory', icon: Package, perm: 'inventory.view' },
+    { id: 'sales', name: 'eSales', icon: ShoppingCart, perm: 'sales.view' },
+    { id: 'purchases', name: 'ePurchases', icon: Download, perm: 'purchases.view' },
+    { id: 'payments', name: 'ePayments', icon: CreditCard, perm: 'payments.view' },
+    { id: 'expenses', name: 'eExpenses', icon: Receipt, perm: 'expenses.view' },
+    { id: 'reports', name: 'eReports', icon: BarChart3, perm: 'reports.view' },
   ];
+
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (role === 'owner') return true;
+    if (item.ownerOnly) return false;
+    if (!item.perm) return true;
+    return hasPermission(userProfile, item.perm);
+  });
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
@@ -73,23 +84,21 @@ export default function Sidebar({ userProfile, onLogout, branches, isOpen, setIs
       </div>
 
       <nav className="sidebar-menu">
-        {menuItems
-          .filter((item) => item.roles.includes(role))
-          .map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.id}
-                to={item.id === 'dashboard' ? '/' : `/${item.id}`}
-                className={`sidebar-item ${activeView === item.id ? 'active' : ''}`}
-                onClick={() => setIsOpen(false)}
-                style={{ textDecoration: 'none' }}
-              >
-                <Icon size={18} />
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+        {visibleMenuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.id}
+              to={item.id === 'dashboard' ? '/' : `/${item.id}`}
+              className={`sidebar-item ${activeView === item.id ? 'active' : ''}`}
+              onClick={() => setIsOpen(false)}
+              style={{ textDecoration: 'none' }}
+            >
+              <Icon size={18} />
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       <div className="sidebar-footer">

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Users, Plus, Search, Trash2, Edit, Building, Mail, Phone, MapPin, Receipt, History, DollarSign } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Contacts({ userProfile, addToast }) {
   const [contacts, setContacts] = useState([]);
   const [sales, setSales] = useState([]);
   const [purchases, setPurchases] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('customer'); // 'customer' or 'supplier'
 
   // Form states
@@ -266,7 +267,6 @@ export default function Contacts({ userProfile, addToast }) {
       <div className="top-bar">
         <div className="page-title-group">
           <h1>eContacts Directory</h1>
-          <p>Manage buyer clients (customers) and spinning mills / suppliers (vendors) profiles.</p>
         </div>
         <div className="top-bar-actions">
           <button 
@@ -338,7 +338,9 @@ export default function Contacts({ userProfile, addToast }) {
               </tr>
             </thead>
             <tbody>
-              {filteredContacts.length === 0 ? (
+              {loading ? (
+                <TableLoading colSpan={5} message="Fetching contacts records..." />
+              ) : filteredContacts.length === 0 ? (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
                     No contacts found matching the filters.

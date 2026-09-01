@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Download, Plus, Search, Trash2, UserPlus, CreditCard } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Purchases({ userProfile, branches, addToast }) {
   const [purchases, setPurchases] = useState([]);
@@ -15,7 +16,7 @@ export default function Purchases({ userProfile, branches, addToast }) {
   const [selectedPurchasePayments, setSelectedPurchasePayments] = useState([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Add Purchase Form states
   const [supplierType, setSupplierType] = useState('existing'); // 'existing' or 'new'
@@ -35,23 +36,35 @@ export default function Purchases({ userProfile, branches, addToast }) {
   const [newSupPhone, setNewSupPhone] = useState('');
   const [newSupAddress, setNewSupAddress] = useState('');
 
-  const [selectedBranchId, setSelectedBranchId] = useState('');
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (userProfile?.role === 'owner') {
+      return branches.length > 0 ? branches[0].id : '';
+    }
+    return userProfile?.branch_id || (branches.length > 0 ? branches[0].id : '');
+  });
 
   useEffect(() => {
-    if (userProfile?.role === 'owner') {
-      if (branches.length > 0 && !selectedBranchId) {
-        setSelectedBranchId(branches[0].id);
+    if (!selectedBranchId) {
+      if (userProfile?.role === 'owner') {
+        if (branches.length > 0) {
+          setSelectedBranchId(branches[0].id);
+        }
+      } else {
+        setSelectedBranchId(userProfile?.branch_id || (branches.length > 0 ? branches[0].id : ''));
       }
-    } else {
-      setSelectedBranchId(userProfile?.branch_id || '');
     }
-  }, [branches, userProfile]);
+  }, [branches, userProfile, selectedBranchId]);
 
+  // Global lookups: Suppliers and Product catalog are fetched on mount
+  useEffect(() => {
+    fetchSuppliers();
+    fetchCatalogProducts();
+  }, []);
+
+  // Branch purchases fetched whenever selected branch changes
   useEffect(() => {
     if (selectedBranchId) {
       fetchPurchases();
-      fetchSuppliers();
-      fetchCatalogProducts();
     }
   }, [selectedBranchId]);
 
@@ -373,7 +386,6 @@ export default function Purchases({ userProfile, branches, addToast }) {
       <div className="top-bar">
         <div className="page-title-group">
           <h1>Supplier Purchases</h1>
-          <p>Log wholesale stock purchases, track cost values, and update inventory counts.</p>
         </div>
         <div className="top-bar-actions" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {userProfile?.role === 'owner' && (
@@ -435,7 +447,9 @@ export default function Purchases({ userProfile, branches, addToast }) {
                 </tr>
               </thead>
               <tbody>
-                {purchases.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={userProfile?.role === 'owner' ? 9 : 8} message="Fetching purchase records..." />
+                ) : purchases.length === 0 ? (
                   <tr>
                     <td colSpan={userProfile?.role === 'owner' ? 9 : 8} style={{ textAlign: 'center', padding: '2rem' }}>
                       No purchases logged. Click "Create Purchase" to add items to stock.

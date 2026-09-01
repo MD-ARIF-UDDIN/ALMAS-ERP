@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { BarChart3, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Printer, Receipt, FileText, ShoppingBag, CreditCard } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Reports({ userProfile, branches }) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ text: '', type: '' });
 
   // Date filters (Default: Start of current month to today)
@@ -17,7 +18,14 @@ export default function Reports({ userProfile, branches }) {
 
   const [startDate, setStartDate] = useState(defaultStart());
   const [endDate, setEndDate] = useState(defaultEnd());
-  const [selectedBranchId, setSelectedBranchId] = useState('');
+
+  const role = userProfile?.role || 'staff';
+  const myBranchId = userProfile?.branch_id;
+
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (role === 'owner') return 'all';
+    return myBranchId || (branches.length > 0 ? branches[0].id : '');
+  });
 
   const handlePresetChange = (preset) => {
     const today = new Date();
@@ -112,18 +120,15 @@ export default function Reports({ userProfile, branches }) {
   const [expensesList, setExpensesList] = useState([]);
   const [activeAuditTab, setActiveAuditTab] = useState('sales'); // 'sales', 'purchases', 'expenses'
 
-  const role = userProfile?.role || 'staff';
-  const myBranchId = userProfile?.branch_id;
-
   useEffect(() => {
-    if (role === 'owner') {
-      if (branches.length > 0 && !selectedBranchId) {
+    if (!selectedBranchId) {
+      if (role === 'owner') {
         setSelectedBranchId('all');
+      } else {
+        setSelectedBranchId(myBranchId || (branches.length > 0 ? branches[0].id : ''));
       }
-    } else {
-      setSelectedBranchId(myBranchId);
     }
-  }, [branches, userProfile]);
+  }, [branches, userProfile, role, myBranchId, selectedBranchId]);
 
   useEffect(() => {
     if (selectedBranchId) {
@@ -295,7 +300,6 @@ export default function Reports({ userProfile, branches }) {
       }}>
         <div className="page-title-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
           <h1 style={{ margin: 0, fontSize: '1.25rem', fontFamily: 'Outfit, sans-serif' }}>Profit & Loss Reports</h1>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Analyze income, procurement cost, overheads, and returns.</p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
@@ -775,7 +779,9 @@ export default function Reports({ userProfile, branches }) {
                 </tr>
               </thead>
               <tbody>
-                {salesList.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={8} message="Fetching sales records..." />
+                ) : salesList.length === 0 ? (
                   <tr>
                     <td colSpan="8" style={{ textAlign: 'center', padding: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No sales recorded.</td>
                   </tr>
@@ -821,7 +827,9 @@ export default function Reports({ userProfile, branches }) {
                 </tr>
               </thead>
               <tbody>
-                {purchasesList.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={8} message="Fetching purchase records..." />
+                ) : purchasesList.length === 0 ? (
                   <tr>
                     <td colSpan="8" style={{ textAlign: 'center', padding: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No purchases recorded.</td>
                   </tr>
@@ -865,7 +873,9 @@ export default function Reports({ userProfile, branches }) {
                 </tr>
               </thead>
               <tbody>
-                {expensesList.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={6} message="Fetching expense records..." />
+                ) : expensesList.length === 0 ? (
                   <tr>
                     <td colSpan="6" style={{ textAlign: 'center', padding: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>No overhead expenses logged.</td>
                   </tr>

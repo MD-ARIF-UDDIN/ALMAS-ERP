@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
-import { supabase as supabaseClient } from './supabaseClient';
 import Auth from './views/Auth';
 import Sidebar from './components/Sidebar';
 import Dashboard from './views/Dashboard';
 import Users from './views/Users';
+import Product from './views/Product';
 import Inventory from './views/Inventory';
 import Sales from './views/Sales';
 import Purchases from './views/Purchases';
@@ -38,34 +38,6 @@ function App() {
     }, 4000);
   };
 
-  // Monitor auth state changes on mount
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-        setLoading(false);
-      }
-    });
-
-    fetchBranches();
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const fetchBranches = async () => {
     try {
       const { data, error } = await supabase
@@ -74,9 +46,12 @@ function App() {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setBranches(data || []);
+      const branchList = data || [];
+      setBranches(branchList);
+      return branchList;
     } catch (err) {
       console.error('Error fetching branches:', err);
+      return [];
     }
   };
 
@@ -90,12 +65,58 @@ function App() {
 
       if (error) throw error;
       setUserProfile(data);
+      return data;
     } catch (err) {
       console.error('Error fetching user profile:', err);
-    } finally {
-      setLoading(false);
+      return null;
     }
   };
+
+  // Monitor auth state changes on mount with coordinated initialization
+  useEffect(() => {
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        setSession(session);
+        if (session) {
+          await Promise.allSettled([
+            fetchUserProfile(session.user.id),
+            fetchBranches(),
+          ]);
+        }
+      } catch (err) {
+        console.error('Initialization error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    init();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      setSession(session);
+      if (session) {
+        await Promise.allSettled([
+          fetchUserProfile(session.user.id),
+          fetchBranches(),
+        ]);
+      } else {
+        setUserProfile(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -155,6 +176,7 @@ function App() {
           <Route path="/" element={<Dashboard userProfile={userProfile} branches={branches} addToast={addToast} />} />
           <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/users" element={<Users branches={branches} fetchBranches={fetchBranches} addToast={addToast} />} />
+          <Route path="/products" element={<Product userProfile={userProfile} branches={branches} addToast={addToast} />} />
           <Route path="/inventory" element={<Inventory userProfile={userProfile} branches={branches} addToast={addToast} />} />
           <Route path="/sales" element={<Sales userProfile={userProfile} branches={branches} addToast={addToast} />} />
           <Route path="/purchases" element={<Purchases userProfile={userProfile} branches={branches} addToast={addToast} />} />

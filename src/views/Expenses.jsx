@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Plus, Search, Trash2, Receipt, CreditCard } from 'lucide-react';
+import { TableLoading } from '../components/TableLoading';
 
 export default function Expenses({ userProfile, branches, addToast }) {
   const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Add Expense states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -18,7 +19,24 @@ export default function Expenses({ userProfile, branches, addToast }) {
   // Search/Filter states
   const [searchQuery, setSearchQuery] = useState('');
 
-  const selectedBranchId = userProfile?.branch_id || (branches.length > 0 ? branches[0].id : '');
+  const [selectedBranchId, setSelectedBranchId] = useState(() => {
+    if (userProfile?.role === 'owner') {
+      return branches.length > 0 ? branches[0].id : '';
+    }
+    return userProfile?.branch_id || (branches.length > 0 ? branches[0].id : '');
+  });
+
+  useEffect(() => {
+    if (!selectedBranchId) {
+      if (userProfile?.role === 'owner') {
+        if (branches.length > 0) {
+          setSelectedBranchId(branches[0].id);
+        }
+      } else {
+        setSelectedBranchId(userProfile?.branch_id || (branches.length > 0 ? branches[0].id : ''));
+      }
+    }
+  }, [branches, userProfile, selectedBranchId]);
 
   const categoriesList = [
     { id: 'raw_materials', name: 'Raw Materials & Yarn' },
@@ -182,9 +200,25 @@ export default function Expenses({ userProfile, branches, addToast }) {
       <div className="top-bar">
         <div className="page-title-group">
           <h1>Expense Ledger</h1>
-          <p>Record business overheads, shop utilities, rent, salaries, and logging payments.</p>
         </div>
         <div className="top-bar-actions">
+          {userProfile?.role === 'owner' && branches.length > 0 && (
+            <div className="form-group" style={{ marginBottom: 0, flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ whiteSpace: 'nowrap' }}>Active Branch:</label>
+              <select
+                className="input-control"
+                value={selectedBranchId}
+                onChange={(e) => setSelectedBranchId(e.target.value)}
+                style={{ width: '200px' }}
+              >
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <button 
             className="btn btn-primary"
             onClick={() => {
@@ -197,8 +231,6 @@ export default function Expenses({ userProfile, branches, addToast }) {
           </button>
         </div>
       </div>
-
-
 
       {/* Expenses List occupying full width */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -234,7 +266,9 @@ export default function Expenses({ userProfile, branches, addToast }) {
                 </tr>
               </thead>
               <tbody>
-                {filteredExpenses.length === 0 ? (
+                {loading ? (
+                  <TableLoading colSpan={7} message="Fetching expense records..." />
+                ) : filteredExpenses.length === 0 ? (
                   <tr>
                     <td colSpan="7" style={{ textAlign: 'center', padding: '2rem' }}>
                       No expenses logged for this branch.
